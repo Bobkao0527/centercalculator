@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中樞算機</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000205; /* 深邃的宇宙黑 */
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* UI 疊加層 */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 150px rgba(0, 150, 255, 0.1);
+            z-index: 10;
+        }
+
+        /* 科技風大標題 */
+        .main-header {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: auto;
+        }
+
+        .main-title {
+            color: #88eaff;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            text-shadow: 
+                0 0 10px rgba(136, 234, 255, 0.5),
+                0 0 20px rgba(136, 234, 255, 0.3),
+                0 0 40px rgba(0, 150, 255, 0.2);
+            position: relative;
+            padding: 10px 40px;
+        }
+
+        .main-title::before, .main-title::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: #88eaff;
+            top: 50%;
+            box-shadow: 0 0 10px #88eaff;
+        }
+        .main-title::before { left: -30px; }
+        .main-title::after { right: -30px; }
+
+        .sub-title {
+            color: rgba(136, 234, 255, 0.6);
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            margin-top: 5px;
+            background: rgba(0, 20, 40, 0.4);
+            display: inline-block;
+            padding: 2px 15px;
+            border-radius: 2px;
+        }
+
+        .hud-text {
+            position: absolute;
+            color: rgba(100, 200, 255, 0.6);
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        #top-left { top: 30px; left: 40px; border-left: 2px solid rgba(0, 180, 255, 0.5); padding-left: 10px;}
+        #bottom-right { bottom: 30px; right: 40px; text-align: right; border-right: 2px solid rgba(0, 180, 255, 0.5); padding-right: 10px;}
+    </style>
+</head>
+<body>
+    <div id="ui-layer">
+        <div class="main-header">
+            <h1 class="main-title">中樞算機</h1>
+            <div class="sub-title">CORE COMPUTING UNIT // DATA STREAM ACTIVE</div>
+        </div>
+
+        <div class="hud-text" id="top-left">
+            SYS.CORE_V2.5<br>
+            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">UPLOADING NEURAL DATA</span>
+        </div>
+        <div class="hud-text" id="bottom-right">
+            SECURE FLOW: STABLE<br>
+            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">SYNC RATE: 98.4%</span>
+        </div>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // ==========================================
+        // 1. 初始化
+        // ==========================================
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000205, 0.045); 
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 4, 14);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // ==========================================
+        // 2. 電路板紋理
+        // ==========================================
+        function createCircuitTexture(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'square';
+
+            ctx.fillStyle = '#112233';
+            for(let x=0; x<size; x+=8) {
+                for(let y=0; y<size; y+=8) {
+                    if(Math.random() > 0.7) ctx.fillRect(x-1, y-1, 2, 2);
+                }
+            }
+
+            ctx.strokeStyle = '#ffffff'; 
+            for(let i=0; i<150; i++) {
+                ctx.beginPath();
+                let x = Math.floor(Math.random() * (size/16)) * 16;
+                let y = Math.floor(Math.random() * (size/16)) * 16;
+                ctx.moveTo(x, y);
+                const segments = Math.floor(Math.random() * 6) + 3;
+                for(let j=0; j<segments; j++) {
+                    const dir = Math.random();
+                    const length = (Math.floor(Math.random() * 5) + 2) * 16;
+                    if(dir < 0.25) x += length;
+                    else if(dir < 0.5) x -= length;
+                    else if(dir < 0.75) y += length;
+                    else y -= length;
+                    x = Math.max(0, Math.min(size, x));
+                    y = Math.max(0, Math.min(size, y));
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(x-2, y-2, 4, 4);
+            }
+
+            for(let i=0; i<40; i++) {
+                let x = Math.floor(Math.random() * (size/16)) * 16;
+                let y = Math.floor(Math.random() * (size/16)) * 16;
+                let bw = (Math.floor(Math.random() * 4) + 2) * 16;
+                let bh = (Math.floor(Math.random() * 3) + 1) * 16;
+                ctx.strokeStyle = '#446688';
+                ctx.strokeRect(x, y, bw, bh);
+                ctx.fillStyle = '#5588aa';
+                for(let j=4; j<bh-4; j+=6) if(Math.random() > 0.3) ctx.fillRect(x+4, y+j, bw-8, 2);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
+        const circuitTexture = createCircuitTexture(1024);
+
+        // ==========================================
+        // 3. Shader 材質
+        // ==========================================
+        const baseVertexShader = `
+            varying vec2 vUv;
+            varying vec3 vWorldPosition;
+            void main() {
+                vUv = uv;
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * viewMatrix * worldPosition;
+            }
+        `;
+
+        const cubeFragmentShader = `
+            uniform float time;
+            uniform sampler2D map;
+            uniform vec3 colorBase;
+            uniform vec3 colorLine;
+            uniform vec3 colorGlow;
+            varying vec2 vUv;
+            void main() {
+                vec4 texColor = texture2D(map, vUv);
+                float mask = texColor.r; 
+                float flow = fract(vUv.x + vUv.y - time * 0.4);
+                float pulse = smoothstep(0.0, 0.15, flow) * smoothstep(0.3, 0.15, flow);
+                float edgeGlow = smoothstep(0.4, 0.5, abs(vUv.x - 0.5)) + smoothstep(0.4, 0.5, abs(vUv.y - 0.5));
+                vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 4.0);
+                vec3 finalColor = mix(colorBase, finalLineColor, mask);
+                finalColor += colorGlow * edgeGlow * 1.0;
+                gl_FragColor = vec4(finalColor * 1.3, 0.95);
+            }
+        `;
+
+        const floorFragmentShader = `
+            uniform float time;
+            uniform sampler2D map;
+            uniform vec3 colorBase;
+            uniform vec3 colorLine;
+            uniform vec3 colorGlow;
+            uniform vec3 cameraPos;
+            varying vec2 vUv;
+            varying vec3 vWorldPosition;
+            void main() {
+                vec2 uv = vUv * 18.0;
+                vec4 texColor = texture2D(map, uv);
+                float mask = texColor.r;
+                float flow = fract(uv.x + uv.y - time * 0.3);
+                float pulse = smoothstep(0.0, 0.1, flow) * smoothstep(0.2, 0.1, flow);
+                
+                float dist = distance(vWorldPosition, cameraPos);
+                float fade = smoothstep(45.0, 15.0, dist); 
+                
+                vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 3.0);
+                vec3 finalColor = mix(colorBase, finalLineColor, mask);
+                
+                gl_FragColor = vec4(finalColor * fade * 1.5, 1.0);
+            }
+        `;
+
+        const commonUniforms = {
+            time: { value: 0 },
+            map: { value: circuitTexture },
+            colorBase: { value: new THREE.Color(0x001a3d) },
+            colorLine: { value: new THREE.Color(0x0088ff) },
+            colorGlow: { value: new THREE.Color(0x88eaff) }
+        };
+
+        const cubeMaterial = new THREE.ShaderMaterial({
+            uniforms: commonUniforms,
+            vertexShader: baseVertexShader,
+            fragmentShader: cubeFragmentShader,
+            transparent: true
+        });
+
+        // ==========================================
+        // 4. 物件構建
+        // ==========================================
+        const cubeGroup = new THREE.Group();
+        cubeGroup.position.y = 1.5;
+        scene.add(cubeGroup);
+
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), cubeMaterial);
+        cubeGroup.add(cube);
+
+        const edges = new THREE.LineSegments(
+            new THREE.EdgesGeometry(cube.geometry),
+            new THREE.LineBasicMaterial({ color: 0x88eaff, transparent: true, opacity: 0.8 })
+        );
+        edges.scale.set(1.01, 1.01, 1.01);
+        cubeGroup.add(edges);
+
+        const floorMat = new THREE.ShaderMaterial({
+            uniforms: {
+                ...commonUniforms,
+                colorBase: { value: new THREE.Color(0x000205) },
+                cameraPos: { value: camera.position }
+            },
+            vertexShader: baseVertexShader,
+            fragmentShader: floorFragmentShader
+        });
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -2.5;
+        scene.add(floor);
+
+        // --- 向上飄動的數據流系統 ---
+        const streamGroup = new THREE.Group();
+        scene.add(streamGroup);
+
+        const streams = [];
+        const streamCount = 40;
+        
+        for(let i = 0; i < streamCount; i++) {
+            // 隨機半徑與角度，讓數據流圍繞中心
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 0.5 + Math.random() * 1.5;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            // 隨機高度起點（從地面附近開始）
+            const startY = -2.5 + Math.random() * 4;
+            const speed = 0.03 + Math.random() * 0.05;
+            
+            // 建立一條垂直短線
+            const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0.4 + Math.random() * 0.6, 0)
+            ]);
+            const lineMat = new THREE.LineBasicMaterial({ 
+                color: 0x88eaff, 
+                transparent: true, 
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending 
+            });
+            const line = new THREE.Line(lineGeo, lineMat);
+            
+            line.position.set(x, startY, z);
+            streamGroup.add(line);
+            
+            streams.push({
+                mesh: line,
+                speed: speed,
+                originalX: x,
+                originalZ: z
+            });
+        }
+
+        const particlesGeo = new THREE.BufferGeometry();
+        const pCount = 500;
+        const pPos = new Float32Array(pCount * 3);
+        for(let i=0; i<pCount*3; i++) pPos[i] = (Math.random()-0.5)*30;
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        const particles = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ size: 0.06, color: 0x88eaff, transparent: true, blending: THREE.AdditiveBlending }));
+        scene.add(particles);
+
+        // ==========================================
+        // 5. 燈光與動畫
+        // ==========================================
+        scene.add(new THREE.AmbientLight(0x0055aa, 1.0));
+        const pLight = new THREE.PointLight(0x88eaff, 8, 20);
+        cubeGroup.add(pLight);
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', e => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.005;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.005;
+        });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getElapsedTime();
+            commonUniforms.time.value = delta;
+            
+            floorMat.uniforms.cameraPos.value.copy(camera.position);
+
+            // 立方體動畫
+            cubeGroup.rotation.y += 0.006;
+            cubeGroup.rotation.x += 0.003 + Math.sin(delta * 0.5) * 0.002;
+            const cubeBaseY = 1.5 + Math.sin(delta * 1.2) * 0.3;
+            cubeGroup.position.y = cubeBaseY;
+
+            // 數據流動畫邏輯
+            streams.forEach(s => {
+                s.mesh.position.y += s.speed;
+                
+                // 計算與立方體中心的垂直距離
+                const distToCube = Math.abs(s.mesh.position.y - cubeBaseY);
+                
+                // 接近立方體時漸隱
+                if (s.mesh.position.y > cubeBaseY - 1.5) {
+                    s.mesh.material.opacity = Math.max(0, (cubeBaseY - s.mesh.position.y) / 1.5 + 0.5);
+                } else {
+                    s.mesh.material.opacity = 0.8;
+                }
+
+                // 超過立方體頂部後重置回地面
+                if (s.mesh.position.y > cubeBaseY + 0.5) {
+                    s.mesh.position.y = -2.5;
+                    s.mesh.material.opacity = 0;
+                }
+            });
+
+            // 粒子動畫
+            const p = particles.geometry.attributes.position.array;
+            for(let i=1; i<pCount*3; i+=3) {
+                p[i] += 0.03; if(p[i] > 10) p[i] = -5;
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+
+            // 相機隨動
+            camera.position.x += (mouseX - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY + 4 - camera.position.y) * 0.05;
+            camera.lookAt(0, 1, 0);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
