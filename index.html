@@ -11,7 +11,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000205; 
+            background-color: #000205; /* 深邃的宇宙黑 */
             font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -21,6 +21,7 @@
             display: block;
         }
 
+        /* UI 疊加層 */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -32,6 +33,7 @@
             z-index: 10;
         }
 
+        /* 科技風大標題 */
         .main-header {
             position: absolute;
             top: 40px;
@@ -51,7 +53,7 @@
             text-shadow: 
                 0 0 10px rgba(136, 234, 255, 0.5),
                 0 0 20px rgba(136, 234, 255, 0.3),
-                0 0 40px rgba(255, 170, 0, 0.2);
+                0 0 40px rgba(0, 150, 255, 0.2);
             position: relative;
             padding: 10px 40px;
         }
@@ -68,6 +70,17 @@
         .main-title::before { left: -30px; }
         .main-title::after { right: -30px; }
 
+        .sub-title {
+            color: rgba(136, 234, 255, 0.6);
+            font-size: 0.8rem;
+            letter-spacing: 4px;
+            margin-top: 5px;
+            background: rgba(0, 20, 40, 0.4);
+            display: inline-block;
+            padding: 2px 15px;
+            border-radius: 2px;
+        }
+
         .hud-text {
             position: absolute;
             color: rgba(100, 200, 255, 0.6);
@@ -77,7 +90,7 @@
         }
 
         #top-left { top: 30px; left: 40px; border-left: 2px solid rgba(0, 180, 255, 0.5); padding-left: 10px;}
-        #bottom-right { bottom: 30px; right: 40px; text-align: right; border-right: 2px solid rgba(255, 200, 0, 0.5); padding-right: 10px;}
+        #bottom-right { bottom: 30px; right: 40px; text-align: right; border-right: 2px solid rgba(0, 180, 255, 0.5); padding-right: 10px;}
     </style>
 </head>
 <body>
@@ -87,12 +100,12 @@
         </div>
 
         <div class="hud-text" id="top-left">
-            SYS.CORE_V3.0<br>
-            <span style="font-size: 10px; color: rgba(255,200,100,0.6);">HYBRID ENERGY FLOW: ACTIVE</span>
+            SYS.CORE_V2.5<br>
+            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">UPLOADING NEURAL DATA</span>
         </div>
         <div class="hud-text" id="bottom-right">
-            GOLDEN SCAN: SYNCED<br>
-            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">CHRONOS DATA UPLINK</span>
+            SECURE FLOW: STABLE<br>
+            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">SYNC RATE: 98.4%</span>
         </div>
     </div>
     
@@ -117,7 +130,7 @@
         container.appendChild(renderer.domElement);
 
         // ==========================================
-        // 2. 高密度電路板紋理 (完全保留 V2.5 邏輯)
+        // 2. 電路板紋理
         // ==========================================
         function createCircuitTexture(size) {
             const canvas = document.createElement('canvas');
@@ -129,7 +142,6 @@
             ctx.lineWidth = 2;
             ctx.lineCap = 'square';
 
-            // 背景微塵
             ctx.fillStyle = '#112233';
             for(let x=0; x<size; x+=8) {
                 for(let y=0; y<size; y+=8) {
@@ -137,7 +149,6 @@
                 }
             }
 
-            // 主電路路徑
             ctx.strokeStyle = '#ffffff'; 
             for(let i=0; i<150; i++) {
                 ctx.beginPath();
@@ -161,7 +172,6 @@
                 ctx.fillRect(x-2, y-2, 4, 4);
             }
 
-            // 芯片與組件塊
             for(let i=0; i<40; i++) {
                 let x = Math.floor(Math.random() * (size/16)) * 16;
                 let y = Math.floor(Math.random() * (size/16)) * 16;
@@ -182,7 +192,7 @@
         const circuitTexture = createCircuitTexture(1024);
 
         // ==========================================
-        // 3. Shader 材質 (修復金色掃線)
+        // 3. Shader 材質
         // ==========================================
         const baseVertexShader = `
             varying vec2 vUv;
@@ -201,32 +211,16 @@
             uniform vec3 colorBase;
             uniform vec3 colorLine;
             uniform vec3 colorGlow;
-            uniform vec3 colorGold; // 引入金色
             varying vec2 vUv;
             void main() {
                 vec4 texColor = texture2D(map, vUv);
                 float mask = texColor.r; 
-                
-                // 金色斜向流動邏輯 (vUv.x + vUv.y 控制斜向)
                 float flow = fract(vUv.x + vUv.y - time * 0.4);
                 float pulse = smoothstep(0.0, 0.15, flow) * smoothstep(0.3, 0.15, flow);
-                
-                // 邊緣輝光
                 float edgeGlow = smoothstep(0.4, 0.5, abs(vUv.x - 0.5)) + smoothstep(0.4, 0.5, abs(vUv.y - 0.5));
-                
-                // 顏色分層：
-                // 1. 藍色電路底色
-                // 2. 當 pulse 觸發時，混合出金黃色 (colorGold)
-                vec3 lineFinal = mix(colorLine, colorGold, pulse * 5.0); 
-                
-                vec3 finalColor = mix(colorBase, lineFinal, mask);
-                
-                // 增加金色流光的額外發光感
-                finalColor += colorGold * pulse * mask * 1.5;
-                
-                // 疊加邊緣藍光 (維持科技氛圍)
-                finalColor += colorGlow * edgeGlow * 0.8;
-                
+                vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 4.0);
+                vec3 finalColor = mix(colorBase, finalLineColor, mask);
+                finalColor += colorGlow * edgeGlow * 1.0;
                 gl_FragColor = vec4(finalColor * 1.3, 0.95);
             }
         `;
@@ -237,7 +231,6 @@
             uniform vec3 colorBase;
             uniform vec3 colorLine;
             uniform vec3 colorGlow;
-            uniform vec3 colorGold;
             uniform vec3 cameraPos;
             varying vec2 vUv;
             varying vec3 vWorldPosition;
@@ -245,17 +238,14 @@
                 vec2 uv = vUv * 18.0;
                 vec4 texColor = texture2D(map, uv);
                 float mask = texColor.r;
-                
-                // 地面同步金色流光
                 float flow = fract(uv.x + uv.y - time * 0.3);
                 float pulse = smoothstep(0.0, 0.1, flow) * smoothstep(0.2, 0.1, flow);
                 
                 float dist = distance(vWorldPosition, cameraPos);
                 float fade = smoothstep(45.0, 15.0, dist); 
                 
-                // 基礎藍線與金色掃線混合
-                vec3 currentLine = mix(colorLine, colorGold, pulse * 3.0);
-                vec3 finalColor = mix(colorBase, currentLine, mask);
+                vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 3.0);
+                vec3 finalColor = mix(colorBase, finalLineColor, mask);
                 
                 gl_FragColor = vec4(finalColor * fade * 1.5, 1.0);
             }
@@ -266,8 +256,7 @@
             map: { value: circuitTexture },
             colorBase: { value: new THREE.Color(0x001a3d) },
             colorLine: { value: new THREE.Color(0x0088ff) },
-            colorGlow: { value: new THREE.Color(0x88eaff) },
-            colorGold: { value: new THREE.Color(0xffaa00) } // 明亮的琥珀金
+            colorGlow: { value: new THREE.Color(0x88eaff) }
         };
 
         const cubeMaterial = new THREE.ShaderMaterial({
@@ -289,7 +278,7 @@
 
         const edges = new THREE.LineSegments(
             new THREE.EdgesGeometry(cube.geometry),
-            new THREE.LineBasicMaterial({ color: 0x88eaff, transparent: true, opacity: 0.6 })
+            new THREE.LineBasicMaterial({ color: 0x88eaff, transparent: true, opacity: 0.8 })
         );
         edges.scale.set(1.01, 1.01, 1.01);
         cubeGroup.add(edges);
@@ -309,26 +298,45 @@
         scene.add(floor);
 
         // --- 向上飄動的數據流系統 ---
+        const streamGroup = new THREE.Group();
+        scene.add(streamGroup);
+
         const streams = [];
-        for(let i = 0; i < 40; i++) {
+        const streamCount = 40;
+        
+        for(let i = 0; i < streamCount; i++) {
+            // 隨機半徑與角度，讓數據流圍繞中心
             const angle = Math.random() * Math.PI * 2;
             const radius = 0.5 + Math.random() * 1.5;
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
             
+            // 隨機高度起點（從地面附近開始）
+            const startY = -2.5 + Math.random() * 4;
+            const speed = 0.03 + Math.random() * 0.05;
+            
+            // 建立一條垂直短線
+            const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0.4 + Math.random() * 0.6, 0)
+            ]);
             const lineMat = new THREE.LineBasicMaterial({ 
                 color: 0x88eaff, 
                 transparent: true, 
                 opacity: 0.8,
                 blending: THREE.AdditiveBlending 
             });
-            const line = new THREE.Line(
-                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.6, 0)]),
-                lineMat
-            );
-            line.position.set(x, -2.5, z);
-            scene.add(line);
-            streams.push({ mesh: line, speed: 0.03 + Math.random() * 0.05, offset: Math.random() * 100 });
+            const line = new THREE.Line(lineGeo, lineMat);
+            
+            line.position.set(x, startY, z);
+            streamGroup.add(line);
+            
+            streams.push({
+                mesh: line,
+                speed: speed,
+                originalX: x,
+                originalZ: z
+            });
         }
 
         const particlesGeo = new THREE.BufferGeometry();
@@ -340,10 +348,10 @@
         scene.add(particles);
 
         // ==========================================
-        // 5. 燈光與動畫 (掛鉤絕對時間)
+        // 5. 燈光與動畫
         // ==========================================
-        scene.add(new THREE.AmbientLight(0x0055aa, 0.8));
-        const pLight = new THREE.PointLight(0x88eaff, 5, 20);
+        scene.add(new THREE.AmbientLight(0x0055aa, 1.0));
+        const pLight = new THREE.PointLight(0x88eaff, 8, 20);
         cubeGroup.add(pLight);
 
         let mouseX = 0, mouseY = 0;
@@ -354,35 +362,54 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            const now = Date.now() / 1000; 
-            commonUniforms.time.value = now;
+            
+            // 取得當前絕對時間 (秒)
+            const absTime = Date.now() / 1000;
+            
+            // 【修復流光損壞】WebGL Shader 中傳入過大的時間浮點數會導致精度遺失 (畫面破圖)
+            // 流光速率參數為 0.4 與 0.3，以 3600 取餘數能完美整除，保證無縫同步循環且維持高精度
+            commonUniforms.time.value = absTime % 3600;
+            
             floorMat.uniforms.cameraPos.value.copy(camera.position);
 
-            cubeGroup.rotation.y = now * 0.36;
-            cubeGroup.rotation.x = now * 0.18 + Math.sin(now * 0.5) * 0.15;
-            const cubeBaseY = 1.5 + Math.sin(now * 1.2) * 0.3;
+            // 立方體三軸動畫與絕對時間掛勾，確保全設備同步
+            cubeGroup.rotation.y = absTime * 0.36;
+            cubeGroup.rotation.x = absTime * 0.18 + Math.sin(absTime * 0.5) * 0.15;
+            cubeGroup.rotation.z = absTime * 0.12; // 加入 Z 軸同步旋轉
+            
+            const cubeBaseY = 1.5 + Math.sin(absTime * 1.2) * 0.3;
             cubeGroup.position.y = cubeBaseY;
 
-            streams.forEach(s => {
-                const cycle = 7.5;
-                const progress = (now * s.speed * 20 + s.offset) % cycle;
-                s.mesh.position.y = -2.5 + progress;
-                const distToCube = s.mesh.position.y - cubeBaseY;
-                s.mesh.material.opacity = (distToCube > -1.5 && distToCube < 0.5) ? 0.2 : 0.8;
-                // 數據流閃爍金色
-                s.mesh.material.color.set(Math.sin(now + s.offset) > 0.85 ? 0xffaa00 : 0x88eaff);
+            // 數據流動畫邏輯：改為與絕對時間掛勾
+            streams.forEach((s, index) => {
+                const speedPerSec = s.speed * 60; // 將原幀速轉換為每秒速度
+                const distance = 5.5; 
+                const cycleDuration = distance / speedPerSec;
+                
+                // index 確保各數據條起點錯開，但在所有設備上一致
+                const timeInCycle = (absTime + index * 0.37) % cycleDuration;
+                s.mesh.position.y = -2.5 + (timeInCycle * speedPerSec);
+                
+                // 接近立方體時漸隱
+                if (s.mesh.position.y > cubeBaseY - 1.5) {
+                    s.mesh.material.opacity = Math.max(0, (cubeBaseY - s.mesh.position.y) / 1.5 + 0.5);
+                } else {
+                    s.mesh.material.opacity = 0.8;
+                }
             });
 
+            // 粒子動畫
             const p = particles.geometry.attributes.position.array;
             for(let i=1; i<pCount*3; i+=3) {
-                const pIdx = i / 3;
-                p[i] = -5 + ((now * 1.5 + pIdx * 0.2) % 15);
+                p[i] += 0.03; if(p[i] > 10) p[i] = -5;
             }
             particles.geometry.attributes.position.needsUpdate = true;
 
+            // 相機隨動
             camera.position.x += (mouseX - camera.position.x) * 0.05;
             camera.position.y += (-mouseY + 4 - camera.position.y) * 0.05;
             camera.lookAt(0, 1, 0);
+
             renderer.render(scene, camera);
         }
         animate();
