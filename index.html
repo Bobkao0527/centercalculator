@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中樞運算機關</title>
+    <title>中樞運算機關 - 系統控制台</title>
+    <!-- 引入 Tailwind CSS 用於快速構建高品質科幻 UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html {
             margin: 0;
@@ -11,148 +13,229 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000205; /* 深邃的宇宙黑 */
+            background-color: #000205;
             font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
         }
 
         #canvas-container {
             width: 100%;
             height: 100%;
             display: block;
-        }
-
-        /* UI 疊加層 */
-        #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            box-shadow: inset 0 0 150px rgba(0, 150, 255, 0.1);
-            z-index: 10;
+            z-index: 1;
         }
 
-        /* 科技風大標題 */
-        .main-header {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
+        /* 霓虹發光特效 */
+        .neon-glow-cyan {
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.6), 0 0 20px rgba(0, 150, 255, 0.3);
+        }
+        .neon-border-cyan {
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.2), inset 0 0 15px rgba(0, 234, 255, 0.1);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+        }
+
+        /* 科技風按鈕 */
+        .tech-btn {
+            background: rgba(0, 10, 30, 0.75);
+            border: 1px solid rgba(0, 150, 255, 0.4);
+            color: #00eaff;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
             pointer-events: auto;
         }
-
-        .main-title {
-            color: #00eaff; /* 確保主視覺字體為亮藍色 */
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin: 0;
-            letter-spacing: 12px;
-            text-transform: uppercase;
-            text-shadow: 
-                0 0 10px rgba(0, 234, 255, 0.5),
-                0 0 30px rgba(68, 0, 255, 0.7), 
-                0 0 50px rgba(0, 150, 255, 0.2);
-            position: relative;
-            padding: 10px 40px;
+        .tech-btn:hover {
+            background: rgba(0, 234, 255, 0.15);
+            border-color: #00eaff;
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+            text-shadow: 0 0 5px #00eaff;
         }
-
-        .main-title::before, .main-title::after {
+        .tech-btn:active {
+            transform: scale(0.95);
+        }
+        .tech-btn::before {
             content: '';
             position: absolute;
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(to right, #00eaff, #4400ff); 
-            top: 50%;
-            box-shadow: 0 0 10px #4400ff;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.2), transparent);
+            transition: 0.5s;
         }
-        .main-title::before { left: -30px; }
-        .main-title::after { right: -30px; }
-
-        .hud-text {
-            position: absolute;
-            color: rgba(100, 200, 255, 0.6);
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+        .tech-btn:hover::before {
+            left: 100%;
         }
 
-        #top-left { top: 30px; left: 40px; border-left: 2px solid rgba(0, 180, 255, 0.5); padding-left: 10px;}
-        #bottom-right { bottom: 30px; right: 40px; text-align: right; border-right: 2px solid rgba(0, 180, 255, 0.5); padding-right: 10px;}
+        /* 遮罩，防止 UI 阻擋 3D 場景的事件，僅在有 UI 處開啟指針事件 */
+        .interactive-none {
+            pointer-events: none;
+        }
+        .interactive-auto {
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
-    <div id="ui-layer">
-        <div class="main-header">
-            <h1 class="main-title">中樞運算機關</h1>
-        </div>
-
-        <div class="hud-text" id="top-left">
-            SYS.CORE_V2.5<br>
-            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">UPLOADING NEURAL DATA</span>
-        </div>
-        <div class="hud-text" id="bottom-right">
-            SECURE FLOW: STABLE<br>
-            <span style="font-size: 10px; color: rgba(100,200,255,0.5);">SYNC RATE: 98.4%</span>
-        </div>
-    </div>
-    
+    <!-- 3D 渲染容器 -->
     <div id="canvas-container"></div>
 
+    <!-- UI 疊加層 -->
+    <div class="absolute inset-0 z-10 flex flex-col justify-between p-6 md:p-8 interactive-none text-white select-none">
+        
+        <!-- 頂部：標題與基本資訊 -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="border-l-4 border-cyan-400 pl-4 py-1 bg-gradient-to-right from-cyan-950/20 to-transparent">
+                <div class="text-xs text-cyan-400 tracking-widest font-mono">SYS.CORE_V3.1 // NEURAL LINK</div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-[0.3em] uppercase neon-glow-cyan text-cyan-300">中樞運算機關</h1>
+            </div>
+            
+            <!-- 即時狀態儀表 -->
+            <div class="grid grid-cols-3 gap-6 bg-slate-950/60 backdrop-blur-md p-3 rounded-lg border border-cyan-950/50 text-xs font-mono w-full md:w-auto">
+                <div>
+                    <span class="text-slate-400 block mb-1">運算負載 (LOAD)</span>
+                    <span id="load-val" class="text-cyan-400 text-lg font-bold">42.8 %</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block mb-1">核心溫度 (TEMP)</span>
+                    <span id="temp-val" class="text-cyan-400 text-lg font-bold">38.5 °C</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block mb-1">核心頻率 (FREQ)</span>
+                    <span id="freq-val" class="text-cyan-400 text-lg font-bold">4.20 GHz</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 左下：操作終端 & 控制按鈕 -->
+        <footer class="flex flex-col md:flex-row justify-between items-end gap-6 mt-auto">
+            <!-- 指令面板與按鈕 -->
+            <div class="flex flex-col gap-3 w-full md:w-80">
+                <div class="text-xs text-slate-400 font-mono tracking-wider">控制系統狀態 / STATUS SELECTOR</div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="btn-stabilize" class="tech-btn py-2 px-3 text-xs font-bold rounded font-mono interactive-auto">STABILIZE</button>
+                    <button id="btn-overclock" class="tech-btn py-2 px-3 text-xs font-bold rounded font-mono interactive-auto !text-rose-500 !border-rose-950 hover:!border-rose-500 hover:!bg-rose-950/20">OVERCLOCK</button>
+                    <button id="btn-scan" class="tech-btn py-2 px-3 text-xs font-bold rounded font-mono interactive-auto !text-amber-400 !border-amber-950 hover:!border-amber-400 hover:!bg-amber-950/20">SCAN CORE</button>
+                </div>
+                <!-- 終端日誌 -->
+                <div class="bg-black/80 p-3 rounded border border-cyan-950 text-[10px] font-mono text-cyan-500/80 h-24 overflow-y-auto" id="log-terminal">
+                    <div>[SYS] Connection established.</div>
+                    <div>[SYS] Neural Core ready for syncing...</div>
+                    <div>[SYS] Current status: OPTIMAL.</div>
+                </div>
+            </div>
+
+            <!-- 右下：連線與提示資訊 -->
+            <div class="text-right font-mono text-xs text-slate-400 border-r-4 border-cyan-400 pr-4 py-1 bg-gradient-to-left from-cyan-950/20 to-transparent w-full md:w-auto">
+                <div class="text-cyan-400">SECURE FLOW: ACTIVE</div>
+                <div class="text-[10px]">SYNC RATE: <span id="sync-rate" class="text-emerald-400">99.8%</span></div>
+                <div class="text-[9px] text-slate-500 mt-1">HINT: CLICK ON CORE TO DISCHARGE SHOCKWAVE</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 載入 Three.js 核心庫 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // ==========================================
-        // 1. 初始化
-        // ==========================================
+        // ============================================================================
+        // 1. 初始化與全域變數
+        // ============================================================================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000205, 0.045); 
+        // 設定更深邃的環境霧化 (暗色背景)
+        scene.fog = new THREE.FogExp2(0x000205, 0.04); 
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 4, 14);
+        camera.position.set(0, 4, 15);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // ==========================================
-        // 2. 電路板紋理 - 改為深藍底色
-        // ==========================================
+        // 用於光線投射 (Raycasting) 點擊核心
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        // 系統狀態與縮放控制變數
+        let systemState = 'stable'; // 'stable' | 'overclock' | 'scanning'
+        let targetSpeedMultiplier = 1.0;
+        let currentSpeedMultiplier = 1.0;
+        
+        // 漸變縮放狀態變數
+        let targetScale = 1.0;
+        let currentScale = 1.0;
+
+        // 【跨裝置絕對時間同步與局部加速偏移變數】
+        let localRotationOffset = 0.0; // 本地狀態變速（例如超頻、衝擊波）累積的旋轉偏差值
+
+        // 核心顏色漸變控制
+        const colorPalette = {
+            stable: {
+                base: new THREE.Color(0x000615),
+                line: new THREE.Color(0x0044a3),
+                glow: new THREE.Color(0x4400ff),
+                edge: new THREE.Color(0x00eaff)
+            },
+            overclock: {
+                base: new THREE.Color(0x1a0202),
+                line: new THREE.Color(0xd9381e),
+                glow: new THREE.Color(0xff4400),
+                edge: new THREE.Color(0xffaa00)
+            },
+            scanning: {
+                base: new THREE.Color(0x0a1005),
+                line: new THREE.Color(0x55aa22),
+                glow: new THREE.Color(0x00ff66),
+                edge: new THREE.Color(0xccff00)
+            }
+        };
+
+        // 當前運算中的顏色 (用於 Lerp 平滑漸變)
+        const activeColors = {
+            base: colorPalette.stable.base.clone(),
+            line: colorPalette.stable.line.clone(),
+            glow: colorPalette.stable.glow.clone(),
+            edge: colorPalette.stable.edge.clone()
+        };
+
+        // ============================================================================
+        // 2. 電路板紋理生成 (維持原高質感，細緻化裝飾)
+        // ============================================================================
         function createCircuitTexture(size) {
             const canvas = document.createElement('canvas');
             canvas.width = size;
             canvas.height = size;
             const ctx = canvas.getContext('2d');
             
-            // 基礎底色調為極深藍
+            // 深邃藍底色
             ctx.fillStyle = '#00081a';
             ctx.fillRect(0, 0, size, size);
             
             ctx.lineWidth = 2;
             ctx.lineCap = 'square';
 
-            // 背景深藍微光網點
+            // 背景點矩陣 (微弱星點)
             ctx.fillStyle = '#001a33';
-            for(let x=0; x<size; x+=8) {
-                for(let y=0; y<size; y+=8) {
-                    if(Math.random() > 0.7) ctx.fillRect(x-1, y-1, 2, 2);
+            for(let x=0; x<size; x+=16) {
+                for(let y=0; y<size; y+=16) {
+                    if(Math.random() > 0.65) ctx.fillRect(x-1, y-1, 2, 2);
                 }
             }
 
-            // 電路走線 - 這裡設為白色以便 Shader 中的 mask 抓取
+            // 電路佈線 (以白色輸出供 Shader 做遮罩)
             ctx.strokeStyle = '#ffffff'; 
-            for(let i=0; i<150; i++) {
+            for(let i=0; i<180; i++) {
                 ctx.beginPath();
                 let x = Math.floor(Math.random() * (size/16)) * 16;
                 let y = Math.floor(Math.random() * (size/16)) * 16;
                 ctx.moveTo(x, y);
-                const segments = Math.floor(Math.random() * 6) + 3;
+                const segments = Math.floor(Math.random() * 5) + 3;
                 for(let j=0; j<segments; j++) {
                     const dir = Math.random();
-                    const length = (Math.floor(Math.random() * 5) + 2) * 16;
+                    const length = (Math.floor(Math.random() * 4) + 2) * 16;
                     if(dir < 0.25) x += length;
                     else if(dir < 0.5) x -= length;
                     else if(dir < 0.75) y += length;
@@ -162,20 +245,29 @@
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
+
+                // 節點
                 ctx.fillStyle = '#ffffff';
-                ctx.fillRect(x-2, y-2, 4, 4);
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
             }
 
-            // 裝飾性區塊 - 深藍灰
-            for(let i=0; i<40; i++) {
+            // 晶片組與裝飾區塊
+            for(let i=0; i<30; i++) {
                 let x = Math.floor(Math.random() * (size/16)) * 16;
                 let y = Math.floor(Math.random() * (size/16)) * 16;
-                let bw = (Math.floor(Math.random() * 4) + 2) * 16;
-                let bh = (Math.floor(Math.random() * 3) + 1) * 16;
-                ctx.strokeStyle = '#003366';
+                let bw = (Math.floor(Math.random() * 3) + 2) * 16;
+                let bh = (Math.floor(Math.random() * 2) + 2) * 16;
+                ctx.strokeStyle = '#004488';
+                ctx.lineWidth = 1;
                 ctx.strokeRect(x, y, bw, bh);
-                ctx.fillStyle = '#002244';
-                for(let j=4; j<bh-4; j+=6) if(Math.random() > 0.3) ctx.fillRect(x+4, y+j, bw-8, 2);
+                
+                // 內部匯流排
+                ctx.fillStyle = '#00264d';
+                for(let j=4; j<bh-4; j+=6) {
+                    if(Math.random() > 0.3) ctx.fillRect(x+4, y+j, bw-8, 2);
+                }
             }
 
             const texture = new THREE.CanvasTexture(canvas);
@@ -186,46 +278,66 @@
 
         const circuitTexture = createCircuitTexture(1024);
 
-        // ==========================================
-        // 3. Shader 材質
-        // ==========================================
+        // ============================================================================
+        // 3. Shader 材質撰寫 (支援動態顏色變更與掃描線效果)
+        // ============================================================================
         const baseVertexShader = `
             varying vec2 vUv;
             varying vec3 vWorldPosition;
+            varying vec3 vLocalPosition;
             void main() {
                 vUv = uv;
+                vLocalPosition = position;
                 vec4 worldPosition = modelMatrix * vec4(position, 1.0);
                 vWorldPosition = worldPosition.xyz;
                 gl_Position = projectionMatrix * viewMatrix * worldPosition;
             }
         `;
 
+        // 核心立方體著色器 - 加入雷射掃描切片效果
         const cubeFragmentShader = `
             uniform float time;
             uniform sampler2D map;
             uniform vec3 colorBase;
             uniform vec3 colorLine;
             uniform vec3 colorGlow;
+            uniform float scanProgress; // 0.0 - 1.0 掃描高度
+            uniform float scanActive;    // 0.0 或 1.0 表示是否啟用掃描
+            
             varying vec2 vUv;
+            varying vec3 vLocalPosition;
+
             void main() {
                 vec4 texColor = texture2D(map, vUv);
                 float mask = texColor.r; 
                 float flow = fract(vUv.x + vUv.y - time * 0.4);
                 
-                // 加寬漸變：0.0~0.8 的柔和波
+                // 動態流光寬幅
                 float pulse = smoothstep(0.0, 0.4, flow) * smoothstep(0.8, 0.4, flow);
                 
-                float edgeGlow = smoothstep(0.4, 0.5, abs(vUv.x - 0.5)) + smoothstep(0.4, 0.5, abs(vUv.y - 0.5));
+                // 邊緣微光
+                float edgeGlow = smoothstep(0.42, 0.5, abs(vUv.x - 0.5)) + smoothstep(0.42, 0.5, abs(vUv.y - 0.5));
                 
-                // 基礎線條顏色與藍紫流光混合
+                // 基礎線路與霓虹流動混合
                 vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 4.0);
                 vec3 finalColor = mix(colorBase, finalLineColor, mask);
                 
-                finalColor += colorGlow * edgeGlow * 1.0;
+                finalColor += colorGlow * edgeGlow * 0.8;
+
+                // 核心雷射掃描特效 (橫截面 Y 軸發光帶)
+                if (scanActive > 0.5) {
+                    // 將 local Y 映射到 0.0 ~ 1.0 (-1.5 to 1.5 for a box of size 3)
+                    float normY = (vLocalPosition.y + 1.5) / 3.0;
+                    float scanDist = abs(normY - scanProgress);
+                    float scanGlow = smoothstep(0.06, 0.0, scanDist);
+                    finalColor += vec3(0.0, 1.0, 0.4) * scanGlow * 2.5; // 強烈綠色掃描光
+                }
+                
                 gl_FragColor = vec4(finalColor * 1.3, 0.95);
             }
         `;
 
+        // 地板著色器 (維持原有相機距離 Fadeout，但新增衝擊波效果)
         const floorFragmentShader = `
             uniform float time;
             uniform sampler2D map;
@@ -233,8 +345,14 @@
             uniform vec3 colorLine;
             uniform vec3 colorGlow;
             uniform vec3 cameraPos;
+            
+            // 衝擊波 Uniforms
+            uniform float waveTime;
+            uniform float waveActive;
+            
             varying vec2 vUv;
             varying vec3 vWorldPosition;
+
             void main() {
                 vec2 uv = vUv * 18.0;
                 vec4 texColor = texture2D(map, uv);
@@ -243,22 +361,38 @@
                 
                 float pulse = smoothstep(0.0, 0.35, flow) * smoothstep(0.7, 0.35, flow);
                 
+                // 地板根據相機距離淡出
                 float dist = distance(vWorldPosition, cameraPos);
                 float fade = smoothstep(45.0, 15.0, dist); 
                 
                 vec3 finalLineColor = mix(colorLine, colorGlow, pulse * 3.0);
                 vec3 finalColor = mix(colorBase, finalLineColor, mask);
                 
+                // 地面脈衝衝擊波 (以圓形向外擴散)
+                if (waveActive > 0.5) {
+                    float distToCenter = length(vWorldPosition.xz);
+                    float waveRadius = waveTime * 25.0; // 擴散速度
+                    float waveWidth = 2.0;
+                    float waveDist = abs(distToCenter - waveRadius);
+                    float waveIntensity = smoothstep(waveWidth, 0.0, waveDist) * (1.0 - smoothstep(0.0, 25.0, waveRadius));
+                    finalColor += colorGlow * waveIntensity * 3.0;
+                }
+
                 gl_FragColor = vec4(finalColor * fade * 1.5, 1.0);
             }
         `;
 
+        // Uniform 宣告
         const commonUniforms = {
             time: { value: 0 },
             map: { value: circuitTexture },
-            colorBase: { value: new THREE.Color(0x000615) }, // 電路板底層色：深藍黑
-            colorLine: { value: new THREE.Color(0x0044a3) }, // 基礎走線：螢光藍
-            colorGlow: { value: new THREE.Color(0x4400ff) }  // 能量流動：藍紫色
+            colorBase: { value: activeColors.base },
+            colorLine: { value: activeColors.line },
+            colorGlow: { value: activeColors.glow },
+            scanProgress: { value: 0.0 },
+            scanActive: { value: 0.0 },
+            waveTime: { value: 0.0 },
+            waveActive: { value: 0.0 }
         };
 
         const cubeMaterial = new THREE.ShaderMaterial({
@@ -268,23 +402,31 @@
             transparent: true
         });
 
-        // ==========================================
-        // 4. 物件構建
-        // ==========================================
+        // ============================================================================
+        // 4. 物件建構與場景組裝
+        // ============================================================================
+        
+        // 4.1 核心主立方體群組
         const cubeGroup = new THREE.Group();
         cubeGroup.position.y = 1.5;
         scene.add(cubeGroup);
 
-        const cube = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), cubeMaterial);
+        const cubeGeometry = new THREE.BoxGeometry(3, 3, 3);
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
         cubeGroup.add(cube);
 
-        const edges = new THREE.LineSegments(
-            new THREE.EdgesGeometry(cube.geometry),
-            new THREE.LineBasicMaterial({ color: 0x00eaff, transparent: true, opacity: 0.9 })
-        );
+        // 立方體外框邊線 (霓虹線條)
+        const edgesGeometry = new THREE.EdgesGeometry(cubeGeometry);
+        const edgesMaterial = new THREE.LineBasicMaterial({ 
+            color: activeColors.edge, 
+            transparent: true, 
+            opacity: 0.9 
+        });
+        const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
         edges.scale.set(1.01, 1.01, 1.01);
         cubeGroup.add(edges);
 
+        // 4.3 地板
         const floorMat = new THREE.ShaderMaterial({
             uniforms: {
                 ...commonUniforms,
@@ -299,93 +441,334 @@
         floor.position.y = -2.5;
         scene.add(floor);
 
-        // --- 向上飄動的藍紫色數據流 ---
+        // 4.4 向上飄動數據流
         const streamGroup = new THREE.Group();
         scene.add(streamGroup);
         const streams = [];
-        const streamCount = 100; 
+        const streamCount = 120; 
+        
         for(let i = 0; i < streamCount; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const radius = 0.5 + Math.random() * 2.0;
+            // 讓資料流集中於核心周遭
+            const radius = 0.4 + Math.random() * 2.8;
             const x = Math.cos(angle) * radius;
             const z = Math.sin(angle) * radius;
-            const startY = -2.5 + Math.random() * 4;
-            const speed = 0.03 + Math.random() * 0.05;
-            const streamLength = 0.5 + Math.random() * 1.0;
-            const streamGeo = new THREE.CylinderGeometry(0.025, 0.025, streamLength, 6);
+            const startY = -2.5 + Math.random() * 6;
+            const speed = 0.02 + Math.random() * 0.04;
+            const streamLength = 0.3 + Math.random() * 1.2;
+            
+            const streamGeo = new THREE.CylinderGeometry(0.015, 0.015, streamLength, 4);
             streamGeo.translate(0, streamLength / 2, 0);
-            const streamMat = new THREE.MeshBasicMaterial({ color: 0x4400ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+            
+            const streamMat = new THREE.MeshBasicMaterial({ 
+                color: activeColors.glow, 
+                transparent: true, 
+                opacity: 0.7, 
+                blending: THREE.AdditiveBlending 
+            });
             const streamMesh = new THREE.Mesh(streamGeo, streamMat);
             streamMesh.position.set(x, startY, z);
             streamGroup.add(streamMesh);
-            streams.push({ mesh: streamMesh, speed: speed });
+            streams.push({ mesh: streamMesh, speed: speed, originalSpeed: speed, baseOpacity: 0.7 });
         }
 
+        // 4.5 背景懸浮粒子星系
         const particlesGeo = new THREE.BufferGeometry();
-        const pCount = 500;
+        const pCount = 600;
         const pPos = new Float32Array(pCount * 3);
-        for(let i=0; i<pCount*3; i++) pPos[i] = (Math.random()-0.5)*30;
+        // 初始化給予確定位置（雖然高度隨後會被絕對時間覆寫，但 X, Z 軸仍保持隨機分佈）
+        for(let i=0; i<pCount*3; i++) pPos[i] = (Math.random()-0.5)*35;
         particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-        const particles = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ size: 0.06, color: 0x88eaff, transparent: true, blending: THREE.AdditiveBlending }));
+        const particlesMat = new THREE.PointsMaterial({ 
+            size: 0.06, 
+            color: 0x88eaff, 
+            transparent: true, 
+            blending: THREE.AdditiveBlending 
+        });
+        const particles = new THREE.Points(particlesGeo, particlesMat);
         scene.add(particles);
 
-        // ==========================================
-        // 5. 燈光與動畫
-        // ==========================================
-        scene.add(new THREE.AmbientLight(0x002255, 1.0)); 
-        const pLight = new THREE.PointLight(0x4400ff, 12, 20); 
+        // ============================================================================
+        // 5. 燈光配置
+        // ============================================================================
+        scene.add(new THREE.AmbientLight(0x001133, 1.2)); 
+        const pLight = new THREE.PointLight(0x00eaff, 15, 25); 
+        pLight.position.set(0, 0, 0);
         cubeGroup.add(pLight);
 
-        let mouseX = 0, mouseY = 0;
-        document.addEventListener('mousemove', e => {
-            mouseX = (e.clientX - window.innerWidth / 2) * 0.005;
-            mouseY = (e.clientY - window.innerHeight / 2) * 0.005;
+        // ============================================================================
+        // 6. 互動事件 (滑鼠與觸控事件整合)
+        // ============================================================================
+        let targetCamX = 0, targetCamY = 4;
+        let isUserInteracting = false;
+
+        // 整合指標位置 (相容滑鼠與觸控)
+        function updatePointer(clientX, clientY) {
+            targetCamX = (clientX - window.innerWidth / 2) * 0.006;
+            targetCamY = -(clientY - window.innerHeight / 2) * 0.006 + 4;
+            
+            // 標準化座標給 Raycaster
+            pointer.x = (clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+        }
+
+        window.addEventListener('pointermove', (e) => {
+            updatePointer(e.clientX, e.clientY);
         });
+
+        // 點擊/觸控核心觸發衝擊波脈衝 (Core Discharge)
+        window.addEventListener('pointerdown', (e) => {
+            updatePointer(e.clientX, e.clientY);
+            
+            // 利用 Raycaster 偵測是否擊中核心
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObject(cube);
+            
+            if (intersects.length > 0) {
+                triggerCorePulse();
+            }
+        });
+
+        // 觸發脈衝函數
+        let shockwaveActive = false;
+        let shockwaveTime = 0;
+        function triggerCorePulse() {
+            if (shockwaveActive) return; // 避免重複觸發
+            
+            writeTerminal("[DISCHARGE] Energy discharge initiated by manual override!");
+            shockwaveActive = true;
+            shockwaveTime = 0;
+            commonUniforms.waveActive.value = 1.0;
+            
+            // 視覺特效：短暫提升粒子與資料流的速度，並漸進式放大目標縮放比例
+            targetSpeedMultiplier = 3.5;
+            targetScale = 1.25; // 設定放大目標（非直接跳大）
+            
+            // 350 毫秒後開始流暢回縮至原始大小
+            setTimeout(() => {
+                targetScale = 1.0;
+            }, 350);
+
+            // 800 毫秒後恢復正常速度倍率
+            setTimeout(() => {
+                targetSpeedMultiplier = (systemState === 'overclock') ? 2.5 : 1.0;
+            }, 800);
+        }
+
+        // ============================================================================
+        // 7. 系統狀態切換與 UI 數據更新
+        // ============================================================================
+        const logTerminal = document.getElementById('log-terminal');
+        const loadVal = document.getElementById('load-val');
+        const tempVal = document.getElementById('temp-val');
+        const freqVal = document.getElementById('freq-val');
+        const syncRate = document.getElementById('sync-rate');
+
+        function writeTerminal(text) {
+            const timeStr = new Date().toLocaleTimeString().split(' ')[0];
+            const logLine = document.createElement('div');
+            logLine.innerHTML = `<span class="text-slate-500">[${timeStr}]</span> ${text}`;
+            logTerminal.appendChild(logLine);
+            logTerminal.scrollTop = logTerminal.scrollHeight;
+        }
+
+        // 模擬動態系統監控數值
+        function updateTelemetry() {
+            let baseLoad, baseTemp, baseFreq, syncPercent;
+            
+            if (systemState === 'overclock') {
+                baseLoad = 92.5 + Math.random() * 5.0;
+                baseTemp = 82.4 + Math.random() * 4.0;
+                baseFreq = 5.85 + Math.random() * 0.15;
+                syncPercent = (94.2 + Math.random() * 1.5).toFixed(1) + "%";
+                syncRate.className = "text-rose-500 font-bold";
+            } else if (systemState === 'scanning') {
+                baseLoad = 65.2 + Math.random() * 8.0;
+                baseTemp = 48.1 + Math.random() * 2.0;
+                baseFreq = 4.60 + Math.random() * 0.05;
+                syncPercent = (98.0 + Math.random() * 0.8).toFixed(1) + "%";
+                syncRate.className = "text-amber-400 font-bold";
+            } else { // stable
+                baseLoad = 35.4 + Math.random() * 4.0;
+                baseTemp = 36.8 + Math.random() * 1.2;
+                baseFreq = 4.20 + Math.random() * 0.02;
+                syncPercent = (99.8 + Math.random() * 0.1).toFixed(1) + "%";
+                syncRate.className = "text-emerald-400 font-bold";
+            }
+
+            loadVal.textContent = `${baseLoad.toFixed(1)} %`;
+            tempVal.textContent = `${baseTemp.toFixed(1)} °C`;
+            freqVal.textContent = `${baseFreq.toFixed(2)} GHz`;
+            syncRate.textContent = syncPercent;
+        }
+        setInterval(updateTelemetry, 1000);
+
+        // 狀態切換按鈕事件
+        document.getElementById('btn-stabilize').addEventListener('click', () => {
+            if (systemState === 'stable') return;
+            systemState = 'stable';
+            targetSpeedMultiplier = 1.0;
+            writeTerminal("[SYSTEM] Overclocking aborted. Calibrating system cooling... STABLE.");
+        });
+
+        document.getElementById('btn-overclock').addEventListener('click', () => {
+            if (systemState === 'overclock') return;
+            systemState = 'overclock';
+            targetSpeedMultiplier = 2.5;
+            writeTerminal("[WARNING] Overclock mode activated. Heat sinks fully open. OVERCLOCKING!");
+        });
+
+        let scanProgress = 0;
+        document.getElementById('btn-scan').addEventListener('click', () => {
+            if (systemState === 'scanning') return;
+            const prevState = systemState;
+            systemState = 'scanning';
+            targetSpeedMultiplier = 1.5;
+            commonUniforms.scanActive.value = 1.0;
+            scanProgress = 0.0;
+            
+            writeTerminal("[SCANNER] Initiated full diagnostic raster scan of computing core...");
+            
+            // 掃描動效結束排程
+            setTimeout(() => {
+                commonUniforms.scanActive.value = 0.0;
+                systemState = prevState;
+                targetSpeedMultiplier = (prevState === 'overclock') ? 2.5 : 1.0;
+                writeTerminal("[SCANNER] Core integrity checked. Structure 100% stable.");
+            }, 3000);
+        });
+
+        // ============================================================================
+        // 8. 主循環渲染與動畫優化
+        // ============================================================================
+        const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
-            const absTime = Date.now() / 1000;
-            commonUniforms.time.value = absTime % 3600;
+            
+            const delta = clock.getDelta();
+            
+            // 【跨裝置絕對時間計算】
+            // 使用 UTC 毫秒數轉換為秒數，並對 86400（一天）取模，確保每台裝備計算出來的基礎時間 100% 相同。
+            const syncTime = (Date.now() / 1000) % 86400; 
+            
+            // 1. 平滑插值系統當前速度倍率
+            currentSpeedMultiplier = THREE.MathUtils.lerp(currentSpeedMultiplier, targetSpeedMultiplier, delta * 3.0);
+            
+            // 【狀態偏移量累積】
+            // 為了不讓絕對時間乘以變速時發生度數閃跳，我們在本地「額外」累計速度大於 1.0 時的偏差時間軸。
+            // 當前狀態為標準速度 (1.0) 時，此偏差值維持恆定不變，恢復完全絕對時間同步。
+            localRotationOffset += delta * (currentSpeedMultiplier - 1.0);
+            
+            // 合併後的主動畫同步時間軸
+            const synchronizedTimeline = syncTime + localRotationOffset;
+
+            // 2. 顏色 Lerp 插值 (產生極為絲滑的狀態轉換特效)
+            const targetColorSet = colorPalette[systemState];
+            activeColors.base.lerp(targetColorSet.base, delta * 2.0);
+            activeColors.line.lerp(targetColorSet.line, delta * 2.0);
+            activeColors.glow.lerp(targetColorSet.glow, delta * 2.0);
+            activeColors.edge.lerp(targetColorSet.edge, delta * 2.0);
+            
+            // 更新外框與燈光顏色
+            edgesMaterial.color.copy(activeColors.edge);
+            pLight.color.copy(activeColors.edge);
+
+            // 3. 更新 Shader Uniforms (使用全裝置同步的時間軸，確保流光同步)
+            commonUniforms.time.value = synchronizedTimeline;
             floorMat.uniforms.cameraPos.value.copy(camera.position);
 
-            cubeGroup.rotation.y = absTime * 0.36;
-            cubeGroup.rotation.x = absTime * 0.18 + Math.sin(absTime * 0.5) * 0.15;
-            cubeGroup.rotation.z = absTime * 0.12; 
-            const cubeBaseY = 1.5 + Math.sin(absTime * 1.2) * 0.3;
+            // 若在掃描狀態，累加掃描進度 (0.0 to 1.0)
+            if (commonUniforms.scanActive.value > 0.5) {
+                scanProgress += delta * 0.35;
+                commonUniforms.scanProgress.value = scanProgress % 1.0;
+            }
+
+            // 地面衝擊波擴散動畫
+            if (shockwaveActive) {
+                shockwaveTime += delta;
+                commonUniforms.waveTime.value = shockwaveTime;
+                if (shockwaveTime > 1.2) {
+                    shockwaveActive = false;
+                    commonUniforms.waveActive.value = 0.0;
+                }
+            }
+
+            // 4. 縮放 Lerp 平滑插值 (解決點擊瞬間放大的跳躍感)
+            currentScale = THREE.MathUtils.lerp(currentScale, targetScale, delta * 7.5);
+            cube.scale.set(currentScale, currentScale, currentScale);
+            edges.scale.set(currentScale * 1.01, currentScale * 1.01, currentScale * 1.01);
+
+            // 5. 物件自轉動畫 (與絕對時間軸掛鉤，取代舊版的 += 增量疊加)
+            // 基礎角速度係數：Y軸 = 0.15, X軸 = 0.08, Z軸 = 0.05
+            // 晃動波形 sin 使用 syncTime 確保所有螢幕的左右晃動相位一致
+            cubeGroup.rotation.y = synchronizedTimeline * 0.15;
+            cubeGroup.rotation.x = synchronizedTimeline * 0.08 + Math.sin(syncTime * 0.5) * 0.15;
+            cubeGroup.rotation.z = synchronizedTimeline * 0.05;
+
+            // 核心懸浮起伏 (同步浮空高度)
+            const cubeBaseY = 1.5 + Math.sin(syncTime * 1.5) * 0.25;
             cubeGroup.position.y = cubeBaseY;
 
+            // 6. 數據流漂移動畫 (同步粒子管道流速)
             streams.forEach((s, index) => {
-                const speedPerSec = s.speed * 60;
-                const distance = 5.5; 
-                const cycleDuration = distance / speedPerSec;
-                const timeInCycle = (absTime + index * 0.37) % cycleDuration;
-                s.mesh.position.y = -2.5 + (timeInCycle * speedPerSec);
-                if (s.mesh.position.y > cubeBaseY - 1.5) {
-                    s.mesh.material.opacity = Math.max(0, (cubeBaseY - s.mesh.position.y) / 1.5 + 0.5);
+                const step = s.speed * 60; // 基礎資料粒子前進速度
+                const distanceRange = 6.0;
+                const cycleDuration = distanceRange / step;
+                // 將絕對時間帶入循環，使所有裝置的數據微粒流完全同拍
+                const timeInCycle = (synchronizedTimeline + index * 0.41) % cycleDuration;
+                
+                s.mesh.position.y = -2.5 + (timeInCycle * step);
+                
+                // 動態流動顏色漸變
+                s.mesh.material.color.copy(activeColors.glow);
+
+                // 電源漸變淡出 (核心高度附近)
+                if (s.mesh.position.y > cubeBaseY - 1.2) {
+                    s.mesh.material.opacity = Math.max(0, (cubeBaseY - s.mesh.position.y) / 1.5 + 0.4) * s.baseOpacity;
                 } else {
-                    s.mesh.material.opacity = 0.8;
+                    s.mesh.material.opacity = s.baseOpacity;
                 }
             });
 
+            // 7. 確定性星系粒子飄動 (使用確定性函數計算高度，實現全裝置粒子高度完全同步)
             const p = particles.geometry.attributes.position.array;
             for(let i=1; i<pCount*3; i+=3) {
-                p[i] += 0.03; if(p[i] > 10) p[i] = -5;
+                const j = (i - 1) / 3;
+                // 利用 index 計算各粒子專屬且唯一的確定性初始 Y 座標 [-15.0, 15.0]
+                const baseHeight = (j * 17.59) % 30.0 - 15.0; 
+                // 確定性的隨機速度係數 [0.5, 1.0]
+                const speedFactor = 0.5 + ((j * 11.23) % 0.5); 
+                const travelDistance = 30.0;
+                
+                // 將絕對時間加上本地加速，計算粒子當前高度
+                const currentHeight = baseHeight + (synchronizedTimeline * 0.9 * speedFactor);
+                
+                // 透過取模演算法在 [-15, 15] 之間完美循環
+                p[i] = ((currentHeight + 15.0) % travelDistance) - 15.0;
             }
             particles.geometry.attributes.position.needsUpdate = true;
 
-            camera.position.x += (mouseX - camera.position.x) * 0.05;
-            camera.position.y += (-mouseY + 4 - camera.position.y) * 0.05;
-            camera.lookAt(0, 1, 0);
+            // 8. 相機平滑滑移
+            camera.position.x += (targetCamX - camera.position.x) * 0.04;
+            camera.position.y += (targetCamY - camera.position.y) * 0.04;
+            camera.lookAt(0, 1.2, 0);
 
             renderer.render(scene, camera);
         }
-        animate();
 
+        // ============================================================================
+        // 9. 視窗適應
+        // ============================================================================
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // 立即啟動動畫循環與終端初始日誌
+        animate();
+        writeTerminal("[SYS] System fully initialized. Interactive Hologram Online.");
     </script>
 </body>
 </html>
