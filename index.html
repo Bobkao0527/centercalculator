@@ -87,22 +87,22 @@
         <!-- 頂部：標題與基本資訊 -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div class="border-l-4 border-cyan-400 pl-4 py-1 bg-gradient-to-right from-cyan-950/20 to-transparent">
-                <div class="text-xs text-cyan-400 tracking-widest font-mono">SYS.CORE_V3.1 // NEURAL LINK</div>
+                <div class="text-xs text-cyan-400 tracking-widest font-mono">THE CORE</div>
                 <h1 class="text-2xl md:text-3xl font-extrabold tracking-[0.3em] uppercase neon-glow-cyan text-cyan-300">中樞運算機關</h1>
             </div>
             
             <!-- 即時狀態儀表 -->
             <div class="grid grid-cols-3 gap-6 bg-slate-950/60 backdrop-blur-md p-3 rounded-lg border border-cyan-950/50 text-xs font-mono w-full md:w-auto">
                 <div>
-                    <span class="text-slate-400 block mb-1">運算負載 (LOAD)</span>
+                    <span class="text-slate-400 block mb-1">LOAD</span>
                     <span id="load-val" class="text-cyan-400 text-lg font-bold">42.8 %</span>
                 </div>
                 <div>
-                    <span class="text-slate-400 block mb-1">核心溫度 (TEMP)</span>
+                    <span class="text-slate-400 block mb-1">TEMP</span>
                     <span id="temp-val" class="text-cyan-400 text-lg font-bold">38.5 °C</span>
                 </div>
                 <div>
-                    <span class="text-slate-400 block mb-1">核心頻率 (FREQ)</span>
+                    <span class="text-slate-400 block mb-1">FREQ</span>
                     <span id="freq-val" class="text-cyan-400 text-lg font-bold">4.20 GHz</span>
                 </div>
             </div>
@@ -186,10 +186,10 @@
                 edge: new THREE.Color(0xffaa00)
             },
             scanning: {
-                base: new THREE.Color(0x0a1005),
-                line: new THREE.Color(0x55aa22),
-                glow: new THREE.Color(0x00ff66),
-                edge: new THREE.Color(0xccff00)
+                base: new THREE.Color(0x150f00),   // 深暗金色底
+                line: new THREE.Color(0x9a6a00),   // 金色電路線路
+                glow: new THREE.Color(0xffb700),   // 亮金色霓虹流光
+                edge: new THREE.Color(0xffd700)    // 黃金外框邊界
             }
         };
 
@@ -294,7 +294,7 @@
             }
         `;
 
-        // 核心立方體著色器 - 加入雷射掃描切片效果
+        // 核心立方體著色器 - 加入雷射掃描切片效果 (將原本的綠色改為極具科幻感的金色掃描光)
         const cubeFragmentShader = `
             uniform float time;
             uniform sampler2D map;
@@ -330,7 +330,7 @@
                     float normY = (vLocalPosition.y + 1.5) / 3.0;
                     float scanDist = abs(normY - scanProgress);
                     float scanGlow = smoothstep(0.06, 0.0, scanDist);
-                    finalColor += vec3(0.0, 1.0, 0.4) * scanGlow * 2.5; // 強烈綠色掃描光
+                    finalColor += vec3(1.0, 0.82, 0.0) * scanGlow * 2.5; // 明亮耀眼的金色雷射掃描光
                 }
                 
                 gl_FragColor = vec4(finalColor * 1.3, 0.95);
@@ -556,7 +556,7 @@
         }
 
         // ============================================================================
-        // 7. 系統狀態切換與 UI 數據更新
+        // 7. 系統狀態切換與 UI 數據更新 (使用與絕對時間掛鉤的確定性亂數)
         // ============================================================================
         const logTerminal = document.getElementById('log-terminal');
         const loadVal = document.getElementById('load-val');
@@ -572,27 +572,41 @@
             logTerminal.scrollTop = logTerminal.scrollHeight;
         }
 
-        // 模擬動態系統監控數值
+        // 確定性偽隨機函數 (種子雜湊)
+        function hash(seed) {
+            const h = Math.sin(seed) * 10000;
+            return Math.abs(h - Math.floor(h));
+        }
+
+        // 模擬動態系統監控數值 (與絕對 Unix 時間戳秒數以及當前模式完全同步)
         function updateTelemetry() {
+            // 取绝对時間秒數作為確定性隨機亂數的基礎 Seed
+            const epochSec = Math.floor(Date.now() / 1000);
+            
+            const r1 = hash(epochSec + 7);
+            const r2 = hash(epochSec + 13);
+            const r3 = hash(epochSec + 19);
+            const r4 = hash(epochSec + 31);
+
             let baseLoad, baseTemp, baseFreq, syncPercent;
             
             if (systemState === 'overclock') {
-                baseLoad = 92.5 + Math.random() * 5.0;
-                baseTemp = 82.4 + Math.random() * 4.0;
-                baseFreq = 5.85 + Math.random() * 0.15;
-                syncPercent = (94.2 + Math.random() * 1.5).toFixed(1) + "%";
+                baseLoad = 92.5 + r1 * 5.0;
+                baseTemp = 82.4 + r2 * 4.0;
+                baseFreq = 5.85 + r3 * 0.15;
+                syncPercent = (94.2 + r4 * 1.5).toFixed(1) + "%";
                 syncRate.className = "text-rose-500 font-bold";
             } else if (systemState === 'scanning') {
-                baseLoad = 65.2 + Math.random() * 8.0;
-                baseTemp = 48.1 + Math.random() * 2.0;
-                baseFreq = 4.60 + Math.random() * 0.05;
-                syncPercent = (98.0 + Math.random() * 0.8).toFixed(1) + "%";
+                baseLoad = 65.2 + r1 * 8.0;
+                baseTemp = 48.1 + r2 * 2.0;
+                baseFreq = 4.60 + r3 * 0.05;
+                syncPercent = (98.0 + r4 * 0.8).toFixed(1) + "%";
                 syncRate.className = "text-amber-400 font-bold";
             } else { // stable
-                baseLoad = 35.4 + Math.random() * 4.0;
-                baseTemp = 36.8 + Math.random() * 1.2;
-                baseFreq = 4.20 + Math.random() * 0.02;
-                syncPercent = (99.8 + Math.random() * 0.1).toFixed(1) + "%";
+                baseLoad = 35.4 + r1 * 4.0;
+                baseTemp = 36.8 + r2 * 1.2;
+                baseFreq = 4.20 + r3 * 0.02;
+                syncPercent = (99.8 + r4 * 0.1).toFixed(1) + "%";
                 syncRate.className = "text-emerald-400 font-bold";
             }
 
@@ -609,6 +623,7 @@
             systemState = 'stable';
             targetSpeedMultiplier = 1.0;
             writeTerminal("[SYSTEM] Overclocking aborted. Calibrating system cooling... STABLE.");
+            updateTelemetry(); // 立即手動更新數值使反應更即時
         });
 
         document.getElementById('btn-overclock').addEventListener('click', () => {
@@ -616,6 +631,7 @@
             systemState = 'overclock';
             targetSpeedMultiplier = 2.5;
             writeTerminal("[WARNING] Overclock mode activated. Heat sinks fully open. OVERCLOCKING!");
+            updateTelemetry();
         });
 
         let scanProgress = 0;
@@ -626,8 +642,9 @@
             targetSpeedMultiplier = 1.5;
             commonUniforms.scanActive.value = 1.0;
             scanProgress = 0.0;
+            updateTelemetry();
             
-            writeTerminal("[SCANNER] Initiated full diagnostic raster scan of computing core...");
+            writeTerminal("[SCANNER] Initiating full diagnostic raster scan of computing core...");
             
             // 掃描動效結束排程
             setTimeout(() => {
@@ -635,6 +652,7 @@
                 systemState = prevState;
                 targetSpeedMultiplier = (prevState === 'overclock') ? 2.5 : 1.0;
                 writeTerminal("[SCANNER] Core integrity checked. Structure 100% stable.");
+                updateTelemetry();
             }, 3000);
         });
 
@@ -768,6 +786,7 @@
 
         // 立即啟動動畫循環與終端初始日誌
         animate();
+        updateTelemetry(); // 首次載入立即套用時間同步數值
         writeTerminal("[SYS] System fully initialized. Interactive Hologram Online.");
     </script>
 </body>
